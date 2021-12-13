@@ -23,16 +23,16 @@ def scrape():
     
     
     # Visit the JPL Mars URL
-    url= 'https://spaceimages-mars.com'
-    jpl_image_url= 'https://spaceimages-mars.com/image/featured/mars3.jpg'
-    browser.visit(url)
-    # Scrape the browser into soup and use soup to find the image of mars
-    # Save the image url to a variable called `img_url`
-    html = browser.html
-    soup = BeautifulSoup(html, 'html.parser')
-    image = soup.find("img", class_="headerimage fade-in")["src"]
-    img_url = "https://spaceimages-mars.com"+image
-    featured_image_url = img_url
+    # URL for the featured space image site
+    featured_url = "https://spaceimages-mars.com/"
+    browser.visit(featured_url)
+    # Create BeautifulSoup object; parse with 'html.parser'
+    featured_html = browser.html
+    featured_soup = BeautifulSoup(featured_html, 'html.parser')
+    featured_image = featured_soup.find_all(
+        'img', class_='headerimage fade-in')[0]["src"]
+    featured_image_url = featured_url + featured_image
+
 
     
     ## Scrape Mars facts
@@ -43,37 +43,33 @@ def scrape():
     mars_fact_table=mars_fact.to_html()
     mars_fact_table.replace('\n','') 
     
-    # Scrape Mars hemisphere title and image
-    hemisphere_url='https://marshemispheres.com/'
+   # URL to get the high resolution images
+    hemisphere_url = 'https://marshemispheres.com/'
     browser.visit(hemisphere_url)
-    html = browser.html
-    soup = BeautifulSoup(html, 'html.parser')
-    all_mars_hemispheres = soup.find('div', class_='collapsible results')
-    mars_hemispheres = all_mars_hemispheres.find_all('div', class_='item')
 
-    hemisphere_image_urls = []
-    # Iterate through each hemisphere data
-    for i in mars_hemispheres:
-        # Collect Title
-        hemisphere = i.find('div', class_="description")
-        title = hemisphere.h3.text
-        
-        # Collect image link by browsing to hemisphere page
-        hemisphere_link = hemisphere.a["href"]    
-        browser.visit(hemisphere_url + hemisphere_link)
-        
-        image_html = browser.html
-        image_soup = BeautifulSoup(image_html, 'html.parser')
-        
-        image_link = image_soup.find('div', class_='downloads')
-        image_url = image_link.find('li').a['href']
 
-        # Create Dictionary to store title and url info
-        image_dict = {}
-        image_dict['title'] = title
-        image_dict['img_url'] = image_url
-        
-        hemisphere_image_urls.append(image_dict)
+
+    hemisphere_html = browser.html
+    hemisphere_soup = BeautifulSoup(hemisphere_html, 'html.parser')
+
+    hemisphere = hemisphere_soup.find('div', class_='collapsible results')
+
+    all_hemispheres = hemisphere.find_all('div', class_='item')
+
+    images_titles = []
+
+    for individual in all_hemispheres:
+        img_title = individual.find('h3').text
+        img_title = img_title.replace("Enhanced", "")
+
+        image_url = individual.find('img', class_='thumb')['src']
+        image_src = hemisphere_url + image_url
+    # Define the hemispehere dictionary and set the values
+        hemisphere_dict = {}
+        hemisphere_dict["title"] = img_title
+        hemisphere_dict["img_src"] = image_src
+
+        images_titles.append(hemisphere_dict)
 
 
     # Mars 
@@ -82,7 +78,7 @@ def scrape():
         "news_p": news_p,
         "featured_image_url": featured_image_url,
         "fact_table": str(mars_fact_table),
-        "hemisphere_images": hemisphere_image_urls
+        "hemisphere_images": images_titles
     }
     
     

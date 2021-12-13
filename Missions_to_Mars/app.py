@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect
+xfrom flask import Flask, render_template, redirect
 from flask_pymongo import PyMongo
 import scrape_mars
 
@@ -26,7 +26,7 @@ def scrape():
     mars_dict = mongo.db.mars_dict
     mars_data = scrape_mars.scrape()
     # Update the Mongo database
-    mars_dict.update_one({},{'$inc': {mars_data}})
+    mars_dict.update_many({}, {"$set": mars_data}, upsert=True)
     return redirect("/", code=302)
 
 if __name__ == "__main__":
